@@ -64,6 +64,7 @@ import { DialogTimeline } from "./dialog-timeline"
 import { DialogForkFromTimeline } from "./dialog-fork-from-timeline"
 import { DialogSessionRename } from "../../component/dialog-session-rename"
 import { Sidebar } from "./sidebar"
+import { ActivityBar, type PanelID } from "./activity-bar"
 import { SubagentFooter } from "./subagent-footer.tsx"
 import { DialogSubagent } from "./dialog-subagent.tsx"
 import { Flag } from "@/flag/flag"
@@ -181,15 +182,22 @@ export function Session() {
   const [showGenericToolOutput, setShowGenericToolOutput] = kv.signal("generic_tool_output_visibility", false)
 
   const wide = createMemo(() => dimensions().width > 120)
+  const [activePanels, setActivePanels] = createSignal<PanelID[]>([])
+  const togglePanel = (panel: PanelID) => {
+    setActivePanels((prev) =>
+      prev.includes(panel) ? prev.filter((p) => p !== panel) : [...prev, panel]
+    )
+  }
   const sidebarVisible = createMemo(() => {
     if (session()?.parentID) return false
     if (currentAgentID() !== "main") return false
     if (sidebarOpen()) return true
+    if (activePanels().length > 0) return true
     if (sidebar() === "auto" && wide()) return true
     return false
   })
   const showTimestamps = createMemo(() => timestamps() === "show")
-  const contentWidth = createMemo(() => dimensions().width - (sidebarVisible() ? 42 : 0) - 4)
+  const contentWidth = createMemo(() => dimensions().width - (sidebarVisible() ? 45 : 0) - 4)
   const providers = createMemo(() => Model.index(sync.data.provider))
 
   const scrollAcceleration = createMemo(() => getScrollAcceleration(tuiConfig))
@@ -1216,9 +1224,22 @@ export function Session() {
           <Toast />
         </box>
         <Show when={sidebarVisible()}>
+          <ActivityBar
+            activePanels={activePanels()}
+            onTogglePanel={togglePanel}
+            visible={sidebarVisible()}
+            onToggle={() => {
+              batch(() => {
+                const isVisible = sidebarVisible()
+                setSidebar(() => (isVisible ? "hide" : "auto"))
+                setSidebarOpen(!isVisible)
+                if (isVisible) setActivePanels([])
+              })
+            }}
+          />
           <Switch>
             <Match when={wide()}>
-              <Sidebar sessionID={route.sessionID} />
+              <Sidebar sessionID={route.sessionID} activePanels={activePanels()} />
             </Match>
             <Match when={!wide()}>
               <box
@@ -1230,7 +1251,7 @@ export function Session() {
                 alignItems="flex-end"
                 backgroundColor={RGBA.fromInts(0, 0, 0, 70)}
               >
-                <Sidebar sessionID={route.sessionID} />
+                <Sidebar sessionID={route.sessionID} activePanels={activePanels()} />
               </box>
             </Match>
           </Switch>

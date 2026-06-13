@@ -1,14 +1,33 @@
 import { useProject } from "@tui/context/project"
 import { useSync } from "@tui/context/sync"
-import { createMemo, Show } from "solid-js"
+import { createMemo, For, Show } from "solid-js"
 import { useTheme } from "../../context/theme"
 import { useTuiConfig } from "../../context/tui-config"
 import { InstallationChannel, InstallationVersion } from "@/installation/version"
 import { TuiPluginRuntime } from "../../plugin"
-
 import { getScrollAcceleration } from "../../util/scroll"
+import type { PanelID } from "./activity-bar"
+import {
+  FileExplorerPanel,
+  SkillsPanel,
+  PluginsPanel,
+  SessionsPanel,
+  ModelPanel,
+} from "./panels"
 
-export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
+const PANEL_COMPONENTS: Record<PanelID, () => JSX.Element> = {
+  files: FileExplorerPanel,
+  skills: SkillsPanel,
+  plugins: PluginsPanel,
+  sessions: SessionsPanel,
+  model: ModelPanel,
+}
+
+export function Sidebar(props: {
+  sessionID: string
+  overlay?: boolean
+  activePanels?: PanelID[]
+}) {
   const project = useProject()
   const sync = useSync()
   const { theme } = useTheme()
@@ -27,6 +46,7 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
     return `${info.type}: ${info.name}`
   }
   const scrollAcceleration = createMemo(() => getScrollAcceleration(tuiConfig))
+  const hasActivePanels = () => (props.activePanels?.length ?? 0) > 0
 
   return (
     <Show when={session()}>
@@ -51,37 +71,68 @@ export function Sidebar(props: { sessionID: string; overlay?: boolean }) {
           }}
         >
           <box flexShrink={0} gap={1} paddingRight={1}>
-            <TuiPluginRuntime.Slot
-              name="sidebar_title"
-              mode="single_winner"
-              session_id={props.sessionID}
-              title={session()!.title}
-              share_url={session()!.share?.url}
-            >
-              <box paddingRight={1}>
-                <text fg={theme.text}>
-                  <b>{session()!.title}</b>
-                </text>
-                <Show when={InstallationChannel !== "latest"}>
-                  <text fg={theme.textMuted}>{props.sessionID}</text>
-                </Show>
-                <Show when={session()!.workspaceID}>
-                  <text fg={theme.textMuted}>
-                    <span style={{ fg: workspaceStatus() === "connected" ? theme.success : theme.error }}>●</span>{" "}
-                    {workspaceLabel()}
+            <Show when={hasActivePanels()}>
+              <For each={props.activePanels!}>
+                {(panelId) => {
+                  const Component = PANEL_COMPONENTS[panelId]
+                  return (
+                    <box flexDirection="column" gap={1} paddingBottom={1}>
+                      <Component />
+                    </box>
+                  )
+                }}
+              </For>
+            </Show>
+
+            <Show when={!hasActivePanels()}>
+              <TuiPluginRuntime.Slot
+                name="sidebar_title"
+                mode="single_winner"
+                session_id={props.sessionID}
+                title={session()!.title}
+                share_url={session()!.share?.url}
+              >
+                <box paddingRight={1}>
+                  <text fg={theme.text}>
+                    <b>{session()!.title}</b>
                   </text>
-                </Show>
-                <Show when={session()!.share?.url}>
-                  <text fg={theme.textMuted}>{session()!.share!.url}</text>
-                </Show>
-              </box>
-            </TuiPluginRuntime.Slot>
-            <TuiPluginRuntime.Slot name="sidebar_content" session_id={props.sessionID} />
+                  <Show when={InstallationChannel !== "latest"}>
+                    <text fg={theme.textMuted}>{props.sessionID}</text>
+                  </Show>
+                  <Show when={session()!.workspaceID}>
+                    <text fg={theme.textMuted}>
+                      <span
+                        style={{
+                          fg:
+                            workspaceStatus() === "connected"
+                              ? theme.success
+                              : theme.error,
+                        }}
+                      >
+                        ●
+                      </span>{" "}
+                      {workspaceLabel()}
+                    </text>
+                  </Show>
+                  <Show when={session()!.share?.url}>
+                    <text fg={theme.textMuted}>{session()!.share!.url}</text>
+                  </Show>
+                </box>
+              </TuiPluginRuntime.Slot>
+              <TuiPluginRuntime.Slot
+                name="sidebar_content"
+                session_id={props.sessionID}
+              />
+            </Show>
           </box>
         </scrollbox>
 
         <box flexShrink={0} gap={1} paddingTop={1}>
-          <TuiPluginRuntime.Slot name="sidebar_footer" mode="single_winner" session_id={props.sessionID}>
+          <TuiPluginRuntime.Slot
+            name="sidebar_footer"
+            mode="single_winner"
+            session_id={props.sessionID}
+          >
             <text fg={theme.textMuted}>
               <span style={{ fg: theme.success }}>•</span> <b>Open</b>
               <span style={{ fg: theme.text }}>
