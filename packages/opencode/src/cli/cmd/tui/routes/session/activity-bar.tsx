@@ -1,7 +1,8 @@
-import { For, Show } from "solid-js"
+import { For, Show, createMemo } from "solid-js"
 import { useTheme } from "../../context/theme"
+import { TuiPluginRuntime } from "../../plugin"
 
-export type PanelID = "files" | "skills" | "plugins" | "sessions" | "model"
+export type PanelID = string
 
 interface PanelDef {
   id: PanelID
@@ -9,15 +10,16 @@ interface PanelDef {
   label: string
 }
 
-const PANELS: PanelDef[] = [
+const BUILTIN_PANELS: PanelDef[] = [
   { id: "files", icon: " ", label: "File Explorer" },
-  { id: "skills", icon: "⚡", label: "Skills" },
-  { id: "plugins", icon: " ", label: "Plugins" },
-  { id: "sessions", icon: " ", label: "Sessions" },
-  { id: "model", icon: " ", label: "Model" },
+  { id: "tasks", icon: " ", label: "Tasks" },
+  { id: "todo", icon: "✓", label: "Todo" },
+  { id: "mcp", icon: " ", label: "MCP Servers" },
+  { id: "lsp", icon: " ", label: "LSP Servers" },
 ]
 
 export function ActivityBar(props: {
+  sessionID: string
   activePanels: PanelID[]
   onTogglePanel: (panel: PanelID) => void
   visible: boolean
@@ -39,23 +41,30 @@ export function ActivityBar(props: {
         paddingBottom={1}
       >
         <box gap={1} alignItems="center">
-          <For each={PANELS}>
-            {(panel) => (
-              <box
-                width={3}
-                height={1}
-                alignItems="center"
-                justifyContent="center"
-                onMouseDown={() => props.onTogglePanel(panel.id)}
-              >
-                <text
-                  fg={isActive(panel.id) ? theme.primary : theme.textMuted}
+          <TuiPluginRuntime.Slot
+            name="activity_bar"
+            session_id={props.sessionID}
+            active_panels={props.activePanels}
+            on_toggle={props.onTogglePanel}
+          >
+            <For each={BUILTIN_PANELS}>
+              {(panel) => (
+                <box
+                  width={3}
+                  height={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  onMouseDown={() => props.onTogglePanel(panel.id)}
                 >
-                  {panel.icon}
-                </text>
-              </box>
-            )}
-          </For>
+                  <text
+                    fg={isActive(panel.id) ? theme.primary : theme.textMuted}
+                  >
+                    {panel.icon}
+                  </text>
+                </box>
+              )}
+            </For>
+          </TuiPluginRuntime.Slot>
         </box>
 
         <box alignItems="center" onMouseDown={props.onToggle}>
@@ -68,5 +77,5 @@ export function ActivityBar(props: {
   )
 }
 
-export { PANELS }
+export { BUILTIN_PANELS }
 export type { PanelDef }

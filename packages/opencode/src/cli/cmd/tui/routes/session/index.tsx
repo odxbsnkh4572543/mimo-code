@@ -1225,6 +1225,7 @@ export function Session() {
         </box>
         <Show when={sidebarVisible()}>
           <ActivityBar
+            sessionID={route.sessionID}
             activePanels={activePanels()}
             onTogglePanel={togglePanel}
             visible={sidebarVisible()}

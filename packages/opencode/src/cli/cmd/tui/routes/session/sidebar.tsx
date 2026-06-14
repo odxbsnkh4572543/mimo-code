@@ -9,18 +9,18 @@ import { getScrollAcceleration } from "../../util/scroll"
 import type { PanelID } from "./activity-bar"
 import {
   FileExplorerPanel,
-  SkillsPanel,
-  PluginsPanel,
-  SessionsPanel,
-  ModelPanel,
+  TasksPanel,
+  TodoPanel,
+  McpPanel,
+  LspPanel,
 } from "./panels"
 
-const PANEL_COMPONENTS: Record<PanelID, () => JSX.Element> = {
+const PANEL_COMPONENTS: Record<string, () => any> = {
   files: FileExplorerPanel,
-  skills: SkillsPanel,
-  plugins: PluginsPanel,
-  sessions: SessionsPanel,
-  model: ModelPanel,
+  tasks: TasksPanel,
+  todo: TodoPanel,
+  mcp: McpPanel,
+  lsp: LspPanel,
 }
 
 export function Sidebar(props: {
@@ -75,10 +75,19 @@ export function Sidebar(props: {
               <For each={props.activePanels!}>
                 {(panelId) => {
                   const Component = PANEL_COMPONENTS[panelId]
+                  if (Component) {
+                    return (
+                      <box flexDirection="column" gap={1} paddingBottom={1}>
+                        <Component />
+                      </box>
+                    )
+                  }
                   return (
-                    <box flexDirection="column" gap={1} paddingBottom={1}>
-                      <Component />
-                    </box>
+                    <TuiPluginRuntime.Slot
+                      name="sidebar_panel"
+                      session_id={props.sessionID}
+                      panel_id={panelId}
+                    />
                   )
                 }}
               </For>

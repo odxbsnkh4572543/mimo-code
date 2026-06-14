@@ -11,6 +11,7 @@ import SidebarTodo from "../feature-plugins/sidebar/todo"
 import SidebarFiles from "../feature-plugins/sidebar/files"
 import SidebarFooter from "../feature-plugins/sidebar/footer"
 import SidebarPanels from "../feature-plugins/sidebar/panels"
+import ActivityBarPanels from "../feature-plugins/activity-bar"
 import PluginManager from "../feature-plugins/system/plugins"
 import type { TuiPlugin, TuiPluginModule } from "@mimo-ai/plugin/tui"
 
@@ -33,5 +34,6 @@ export const INTERNAL_TUI_PLUGINS: InternalTuiPlugin[] = [
   SidebarFiles,
   SidebarFooter,
   SidebarPanels,
+  ActivityBarPanels,
   PluginManager,
 ]

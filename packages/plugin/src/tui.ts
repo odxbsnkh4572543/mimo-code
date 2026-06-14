@@ -376,6 +376,15 @@ export type TuiHostSlotMap = {
   sidebar_footer: {
     session_id: string
   }
+  activity_bar: {
+    session_id: string
+    active_panels: string[]
+    on_toggle: (panel_id: string) => void
+  }
+  sidebar_panel: {
+    session_id: string
+    panel_id: string
+  }
 }
 
 export type TuiSlotMap<Slots extends Record<string, object> = {}> = TuiHostSlotMap & Slots

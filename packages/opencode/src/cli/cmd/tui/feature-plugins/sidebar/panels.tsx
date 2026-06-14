@@ -63,7 +63,7 @@ function PanelSection(props: {
         <Show when={open()}>
           <box paddingLeft={2}>
             {props.panel.id === "files" && (
-              <For each={content() as Array<{ file: string; additions: number; deletions: number }>>}>
+              <For each={content() as Array<{ file: string; additions: number; deletions: number }>}>
                 {(item) => (
                   <box flexDirection="row" gap={1}>
                     <text fg={theme().textMuted}>{item.file}</text>
